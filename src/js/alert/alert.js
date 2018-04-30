@@ -7,15 +7,27 @@
     document.head.appendChild(style);
   }
 
+
   customElements.define('joomla-alert', class extends HTMLElement {
     /* Attributes to monitor */
     static get observedAttributes() { return ['type', 'dismiss', 'acknowledge', 'href']; }
     get type() { return this.getAttribute('type'); }
     set type(value) { return this.setAttribute('type', value); }
     get dismiss() { return this.getAttribute('dismiss'); }
-    get acknowledge() { return this.getAttribute('acknowledge'); }
-    get href() { return this.getAttribute('href'); }
+    set dismiss(value) { return this.setAttribute('type', value); }
 
+    constructor() {
+      super();
+      this.buttons = [{ crap: true }, { crap: false }];
+      this.hasDismissButton = false;
+      this.closeButton = '';
+
+      this.dispatchCustomEvent = this.dispatchCustomEvent.bind(this);
+      this.appendCloseButton = this.appendCloseButton.bind(this);
+      this.removeCloseButton = this.removeCloseButton.bind(this);
+      this.close = this.close.bind(this);
+      this.footer = document.createElement('footer');
+    }
     /* Lifecycle, element appended to the DOM */
     connectedCallback() {
       this.setAttribute('role', 'alert');
@@ -25,21 +37,15 @@
       if (!this.type || ['info', 'warning', 'danger', 'success'].indexOf(this.type) === -1) {
         this.setAttribute('type', 'info');
       }
+
       // Append button
-      if (this.hasAttribute('dismiss') || this.hasAttribute('acknowledge') || (this.hasAttribute('href'))) {
-        if ((this.getAttribute('href') !== '')
-          && !this.querySelector('button.joomla-alert--close') && !this.querySelector('button.joomla-alert-button--close')) {
-          this.appendCloseButton();
-        }
+      if (this.hasAttribute('dismiss')) {
+        this.appendCloseButton();
+        this.closeButton.addEventListener('click', this.close);
+        this.closeButton.focus();
       }
 
       this.dispatchCustomEvent('joomla.alert.show');
-
-      const closeButton = this.querySelector('button.joomla-alert--close') || this.querySelector('button.joomla-alert-button--close');
-
-      if (closeButton) {
-        closeButton.focus();
-      }
     }
 
     /* Lifecycle, element removed from the DOM */
@@ -48,8 +54,8 @@
       this.removeEventListener('joomla.alert.close', this);
       this.removeEventListener('joomla.alert.closed', this);
 
-      if (this.firstChild.tagName && this.firstChild.tagName.toLowerCase() === 'button') {
-        this.firstChild.removeEventListener('click', this);
+      if (this.closeButton) {
+        this.closeButton.removeEventListener('click', this.close);
       }
     }
 
@@ -62,33 +68,15 @@
           }
           break;
         case 'dismiss':
-        case 'acknowledge':
           if (!newValue || newValue === 'true') {
             this.appendCloseButton();
           } else {
             this.removeCloseButton();
           }
           break;
-        case 'href':
-          if (!newValue || newValue === '') {
-            this.removeCloseButton();
-          } else if (!this.querySelector('button.joomla-alert-button--close')) {
-            this.appendCloseButton();
-          }
-          break;
         default:
           break;
       }
-    }
-
-    /* Method to close the alert */
-    close() {
-      this.dispatchCustomEvent('joomla.alert.close');
-      this.addEventListener('transitionend', () => {
-        this.dispatchCustomEvent('joomla.alert.closed');
-        this.parentNode.removeChild(this);
-      }, false);
-      this.classList.remove('joomla-alert--show');
     }
 
     /* Method to dispatch events */
@@ -99,79 +87,43 @@
       this.removeEventListener(eventName, this);
     }
 
+    /* Method to close the alert */
+    close() {
+      this.classList.add('close');
+      this.dispatchCustomEvent('joomla.alert.close');
+      this.addEventListener('transitionend', () => {
+        this.dispatchCustomEvent('joomla.alert.closed');
+        this.parentNode.removeChild(this);
+      });
+    }
+
     /* Method to create the close button */
     appendCloseButton() {
-      if (this.querySelector('button.joomla-alert--close') || this.querySelector('button.joomla-alert-button--close')) {
+      if (this.closeButton) {
         return;
       }
 
-      const self = this;
-      const closeButton = document.createElement('button');
+      this.closeButton = document.createElement('button');
 
       if (this.hasAttribute('dismiss')) {
-        closeButton.classList.add('joomla-alert--close');
-        closeButton.innerHTML = '<span aria-hidden="true">&times;</span>';
-        closeButton.setAttribute('aria-label', this.getText('JCLOSE', 'Close'));
-      } else {
-        closeButton.classList.add('joomla-alert-button--close');
-        if (this.hasAttribute('acknowledge')) {
-          closeButton.innerHTML = this.getText('JOK', 'ok');
-        } else {
-          closeButton.innerHTML = this.getText('JOPEN', 'Open');
-        }
+        // this.closeButton.classList.add('joomla-alert--close');
+        this.closeButton.innerHTML = 'Close';
+        // this.closeButton.setAttribute('aria-label', 'Close');
       }
 
-      if (this.firstChild) {
-        this.insertBefore(closeButton, this.firstChild);
-      } else {
-        this.appendChild(closeButton);
-      }
+      this.footer.appendChild(this.closeButton);
 
-      /* Add the required listener */
-      if (closeButton) {
-        if (!this.href) {
-          closeButton.addEventListener('click', () => {
-            self.dispatchCustomEvent('joomla.alert.buttonClicked');
-            if (self.getAttribute('data-callback')) {
-              window[self.getAttribute('data-callback')]();
-              self.close();
-            } else {
-              self.close();
-            }
-          });
-        } else {
-          closeButton.addEventListener('click', () => {
-            self.dispatchCustomEvent('joomla.alert.buttonClicked');
-            window.location.href = self.href;
-            self.close();
-          });
-        }
-      }
+      this.footer.insertAdjacentElement('beforeend', this.closeButton);
 
-      if (this.hasAttribute('auto-dismiss')) {
-        setTimeout(() => {
-          self.dispatchCustomEvent('joomla.alert.buttonClicked');
-          if (self.hasAttribute('data-callback')) {
-            window[self.getAttribute('data-callback')]();
-          } else {
-            self.close();
-          }
-        }, parseInt(self.getAttribute('auto-dismiss'), 10) ? self.getAttribute('auto-dismiss') : 3000);
-      }
+      this.insertAdjacentElement('beforeend', this.footer);
     }
 
     /* Method to remove the close button */
     removeCloseButton() {
-      const button = this.querySelector('button');
-      if (button) {
-        button.removeEventListener('click', this);
-        button.parentNode.removeChild(button);
+      if (this.closeButton) {
+        this.closeButton.removeEventListener('click', this);
+        this.closeButton.parentNode.removeChild(this.closeButton);
       }
-    }
-
-    /* Method to get the translated text */
-    getText(str, fallback) {
-      return (window.Joomla && window.Joomla.JText && window.Joomla.JText._ && typeof window.Joomla.JText._ === 'function' && window.Joomla.JText._(str)) ? window.Joomla.JText._(str) : fallback;
     }
   });
 })();

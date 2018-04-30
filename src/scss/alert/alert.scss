@@ -1,9 +1,8 @@
 // Alerts
 
-@import "../../../node_modules/bootstrap/scss/functions";
-@import "../../../node_modules/bootstrap/scss/mixins";
-@import "../../../node_modules/bootstrap/scss/variables";
 @import "../variables";
+@import "../functions";
+@import "../mixins";
 
 //
 // Base styles
@@ -16,8 +15,9 @@ joomla-alert {
   margin-bottom: $alert-margin-bottom;
   border: $alert-border-width solid transparent;
   opacity: 0;
-  @include border-radius($alert-border-radius);
-  @include transition($transition-fade);
+  transition: -webkit-transform 0.3s ease-out;
+  transition: transform 0.3s ease-out;
+  transition: transform 0.3s ease-out, -webkit-transform 0.3s ease-out;
 
   &.joomla-alert--show {
     display: block;

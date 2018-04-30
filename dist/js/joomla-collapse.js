@@ -3,7 +3,7 @@
   if (!document.head.querySelector('#joomla-collapse-style')) {
     const style = document.createElement('style');
     style.id = 'joomla-collapse-style';
-    style.innerHTML = `joomla-collapse[state=closed]{display:none}joomla-collapse[state=open]{display:block}`;
+    style.innerHTML = 'joomla-collapse[state="closed"]{display:none}joomla-collapse[state="open"]{display:block}';
     document.head.appendChild(style);
   }
 
