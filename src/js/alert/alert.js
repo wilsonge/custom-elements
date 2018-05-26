@@ -7,53 +7,61 @@
     document.head.appendChild(style);
   }
 
-
   customElements.define('joomla-alert', class extends HTMLElement {
     /* Attributes to monitor */
-    static get observedAttributes() { return ['type', 'dismiss', 'acknowledge', 'href']; }
+    static get observedAttributes() { return ['type', 'dismiss', 'title', 'message', 'show', 'button-text']; }
     get type() { return this.getAttribute('type'); }
     set type(value) { return this.setAttribute('type', value); }
     get dismiss() { return this.getAttribute('dismiss'); }
     set dismiss(value) { return this.setAttribute('type', value); }
+    get title() { return this.getAttribute('title'); }
+    set title(value) { return this.setAttribute('title', value); }
+    get message() { return this.getAttribute('message'); }
+    set message(value) { return this.setAttribute('message', value); }
+    get buttonText() { return this.getAttribute('button-text'); }
+    set buttonText(value) { return this.setAttribute('button-text', value); }
 
     constructor() {
       super();
-      this.buttons = [{ crap: true }, { crap: false }];
+      this.header = '';
+      this.messageContainer = '';
       this.hasDismissButton = false;
       this.closeButton = '';
 
       this.dispatchCustomEvent = this.dispatchCustomEvent.bind(this);
       this.appendCloseButton = this.appendCloseButton.bind(this);
       this.removeCloseButton = this.removeCloseButton.bind(this);
+      this.render = this.render.bind(this);
       this.close = this.close.bind(this);
-      this.footer = document.createElement('footer');
     }
     /* Lifecycle, element appended to the DOM */
     connectedCallback() {
       this.setAttribute('role', 'alert');
-      this.classList.add('joomla-alert--show');
 
       // Default to info
       if (!this.type || ['info', 'warning', 'danger', 'success'].indexOf(this.type) === -1) {
         this.setAttribute('type', 'info');
       }
 
-      // Append button
-      if (this.hasAttribute('dismiss')) {
-        this.appendCloseButton();
-        this.closeButton.addEventListener('click', this.close);
-        this.closeButton.focus();
+      // Check if SSR
+      this.header = this.querySelector('h4');
+      this.messageContainer = this.querySelector('div');
+
+      if (this.header) {
+        this.title = this.header.innerText;
       }
+
+      if (this.messageContainer) {
+        this.message = this.messageContainer.innerHTML;
+      }
+
+      this.render();
 
       this.dispatchCustomEvent('joomla.alert.show');
     }
 
     /* Lifecycle, element removed from the DOM */
     disconnectedCallback() {
-      this.removeEventListener('joomla.alert.show', this);
-      this.removeEventListener('joomla.alert.close', this);
-      this.removeEventListener('joomla.alert.closed', this);
-
       if (this.closeButton) {
         this.closeButton.removeEventListener('click', this.close);
       }
@@ -68,11 +76,10 @@
           }
           break;
         case 'dismiss':
-          if (!newValue || newValue === 'true') {
-            this.appendCloseButton();
-          } else {
-            this.removeCloseButton();
-          }
+        case 'title':
+        case 'message':
+        case 'button-text':
+          this.render();
           break;
         default:
           break;
@@ -82,47 +89,71 @@
     /* Method to dispatch events */
     dispatchCustomEvent(eventName) {
       const OriginalCustomEvent = new CustomEvent(eventName);
-      OriginalCustomEvent.relatedTarget = this;
       this.dispatchEvent(OriginalCustomEvent);
-      this.removeEventListener(eventName, this);
+      this.removeEventListener(eventName, OriginalCustomEvent);
     }
 
     /* Method to close the alert */
     close() {
-      this.classList.add('close');
       this.dispatchCustomEvent('joomla.alert.close');
-      this.addEventListener('transitionend', () => {
-        this.dispatchCustomEvent('joomla.alert.closed');
-        this.parentNode.removeChild(this);
-      });
+      this.removeAttribute('show');
+      this.parentNode.removeChild(this);
     }
 
     /* Method to create the close button */
     appendCloseButton() {
+      this.closeButton = this.querySelector('button');
+
       if (this.closeButton) {
+        this.closeButton.setAttribute('aria-label', this.buttonText || 'Close');
+        this.closeButton.addEventListener('click', this.close);
+        this.closeButton.focus();
         return;
       }
 
       this.closeButton = document.createElement('button');
+      const span = document.createElement('span');
+      span.setAttribute('aria-hidden', 'true');
+      span.innerHTML = '&times;';
+      this.closeButton.setAttribute('aria-label', this.buttonText || 'Close');
+      this.closeButton.appendChild(span);
 
-      if (this.hasAttribute('dismiss')) {
-        // this.closeButton.classList.add('joomla-alert--close');
-        this.closeButton.innerHTML = 'Close';
-        // this.closeButton.setAttribute('aria-label', 'Close');
-      }
-
-      this.footer.appendChild(this.closeButton);
-
-      this.footer.insertAdjacentElement('beforeend', this.closeButton);
-
-      this.insertAdjacentElement('beforeend', this.footer);
+      this.insertAdjacentElement('afterbegin', this.closeButton);
+      this.closeButton.addEventListener('click', this.close);
+      this.closeButton.focus();
     }
 
     /* Method to remove the close button */
     removeCloseButton() {
       if (this.closeButton) {
-        this.closeButton.removeEventListener('click', this);
-        this.closeButton.parentNode.removeChild(this.closeButton);
+        this.closeButton.removeEventListener('click', this.close);
+        this.removeChild(this.closeButton);
+      }
+    }
+
+    render() {
+      if (this.title) {
+        if (!this.header) {
+          this.header = document.createElement('h4');
+          this.header.innerText = this.title;
+          this.appendChild(this.header);
+        }
+        this.header.innerText = this.title;
+      }
+
+      if (this.message) {
+        if (!this.messageContainer) {
+          this.messageContainer = document.createElement('div');
+          this.messageContainer.innerHTML = this.message;
+          this.appendChild(this.messageContainer);
+        }
+        this.messageContainer.innerHTML = this.message;
+      }
+
+      if (this.hasAttribute('dismiss') || (this.dismiss && this.dismiss !== 'false')) {
+        this.appendCloseButton();
+      } else {
+        this.removeCloseButton();
       }
     }
   });

@@ -129,4 +129,13 @@ options.settings.elements.forEach(element => {
 });
 
 
+// Copy files to docs folder
+if (fs.existsSync(`${rootPath}/dist`)) {
+  if (fs.existsSync(`${rootPath}/docs/_media/js`)) {
+    fsExtra.emptyDirSync(`${rootPath}/docs/_media/js`)
+  }
+} else {
+  fsExtra.mkdirSync(`${rootPath}/docs/_media/js`);
+}
 
+fsExtra.copySync(`${rootPath}/dist`, `${rootPath}/docs/_media`)

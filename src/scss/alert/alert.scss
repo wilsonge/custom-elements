@@ -1,8 +1,22 @@
 // Alerts
-
 @import "../variables";
 @import "../functions";
 @import "../mixins";
+
+
+@mixin alert-variant($background, $border, $color) {
+  color: $color;
+  background-color: $background;
+  border-color: $border;
+
+  > hr {
+    border-top-color: darken($border, 5%);
+  }
+
+  > .alert-link {
+    color: darken($color, 10%);
+  }
+}
 
 //
 // Base styles
@@ -14,39 +28,35 @@ joomla-alert {
   padding: $alert-padding-y $alert-padding-x;
   margin-bottom: $alert-margin-bottom;
   border: $alert-border-width solid transparent;
-  opacity: 0;
-  transition: -webkit-transform 0.3s ease-out;
-  transition: transform 0.3s ease-out;
-  transition: transform 0.3s ease-out, -webkit-transform 0.3s ease-out;
+  opacity: 1;
 
-  &.joomla-alert--show {
-    display: block;
-    opacity: 1;
+  > h4 {
+    margin: 0;
+    padding: .5rem .7rem;
   }
 
-  .joomla-alert--close, .joomla-alert-button--close {
+  > div {
+    margin: 0;
+    padding: .5rem .7rem;
+  }
+
+  > button {
     position: relative;
     top: -$alert-padding-y;
     right: -$alert-padding-x;
     padding: .2rem 1rem;
     color: inherit;
-  }
-
-  .joomla-alert--close {
     font-size: $close-font-size;
     font-weight: $close-font-weight;
     line-height: 1;
     text-shadow: $close-text-shadow;
-  }
-
-  .joomla-alert--close, .joomla-alert-button--close {
     float: right;
     color: $close-color;
     background: transparent;
     border: 0;
-    opacity: .5;
 
-    @include hover-focus {
+    &:hover,
+    &:focus {
       color: $close-color;
       text-decoration: none;
       cursor: pointer;
@@ -60,16 +70,16 @@ joomla-alert {
   // See https://developer.mozilla.org/en-US/docs/Web/Events/click#Safari_Mobile
 
   // scss-lint:disable QualifyingElement
-  button.joomla-alert-button--close {
+  > button {
     padding-top: .75rem;
     font-size: 100%;
     line-height: 1.15;
     cursor: pointer;
     background: transparent;
     border: 0;
+    appearance: none;
     -webkit-appearance: none;
   }
-
 }
 
 // Alternate styles

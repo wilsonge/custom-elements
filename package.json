@@ -26,6 +26,7 @@
     "@webcomponents/custom-elements": "latest",
     "@webcomponents/webcomponentsjs": "latest",
     "autoprefixer": "^8.0.0",
+    "babel-core": "^6.26.3",
     "babel-eslint": "^8.0.0",
     "babel-minify": "latest",
     "babel-plugin-static-fs": "latest",
