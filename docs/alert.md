@@ -62,7 +62,7 @@ The simplified version of the custom elements
 </div>
 
 <div class="mermaid">
-<joomla-alert type="warning" dismiss><button aria-label="Close"><span aria-hidden="true">&times;</span></button><h4>Warning!</h4><div>You probably need did something wrong.</div></joomla-alert>
+<joomla-alert type="warning" dismiss><button aria-label="Close"><span aria-hidden="true">&times;</span></button><h4>Warning!</h4><div>You probably need to do something here.</div></joomla-alert>
 </div>
 
 <div class="mermaid">
@@ -77,13 +77,13 @@ The simplified version of the custom elements
 Control the design and functionality of the custom element through attributes.
 
 
-|Attribute		|Description|
+|Attribute		|Description																					|
 |---------------|-----------------------------------------------------------------------------------------------|
-|type			|This attribute is responsible for the looks. if not defined defaults to "info"|
-|dismiss		|Appends the x button. True is the only value.|
-|title			|The title of the alert.|
-|message		|The main text of the alert.|
-|button-text	|The aria-label for the close button. if not defined defaults to "Close"|
+|type			|This attribute is responsible for the looks. if not defined defaults to "info"					|
+|dismiss		|Appends the x button. True is the only value.													|
+|title			|The title of the alert.																		|
+|message		|The main text of the alert.																	|
+|button-text	|The aria-label for the close button. if not defined defaults to "Close"						|
 
 
 ## Dismissing
@@ -116,10 +116,10 @@ el.setAttribute('dismiss', ''); // Will set the attribute
 The custom element exposes a few events for hooking into alert functionality.
 
 
-|Event			|Description								     			|
+|Event					|Description																					|
 |-----------------------|-----------------------------------------------------------------------------------------------|
-|joomla.alert.show		|This event fires immediately when the element is appended in the DOM.				|
-|joomla.alert.close		|This event fires immediately when the close instance method is called.				|
+|Joomla.Alert.onShow	|This event fires immediately when the element is appended in the DOM.							|
+|Joomla.Alert.onClose	|This event fires immediately when the close instance method is called.							|
 
 Example:
 Add some functonality when the alert is closing (right before the css transition start):
@@ -209,7 +209,7 @@ el.close();
 
 This alert component complies to all the specification for alerts published in WAI-ARIA Authoring Practices 1.1:
 
-See: [WAI ARIA Practices - 2.3 Alert](https://www.w3.org/TR/wai-aria-practices-1.1/).
+[WAI ARIA Practices - 2.3 Alert](https://www.w3.org/TR/wai-aria-practices-1.1/)
 
 
 <script markdown="0">

@@ -7,7 +7,7 @@
     document.head.appendChild(style);
   }
 
-  customElements.define('joomla-alert', class extends HTMLElement {
+    customElements.define('joomla-alert', class extends HTMLElement {
     /* Attributes to monitor */
     static get observedAttributes() { return ['type', 'dismiss', 'title', 'message', 'show', 'button-text']; }
     get type() { return this.getAttribute('type'); }
@@ -33,9 +33,17 @@
       this.removeCloseButton = this.removeCloseButton.bind(this);
       this.render = this.render.bind(this);
       this.close = this.close.bind(this);
+      this.callback = this.callback.bind(this);
+      this.init = this.init.bind(this);
+
+      // Create an observer instance linked to the callback function
+      this.observer = new MutationObserver(this.callback);
     }
     /* Lifecycle, element appended to the DOM */
     connectedCallback() {
+      // Start observing the target node for configured mutations
+      this.observer.observe(this, { attributes: true, childList: true, subtree: true });
+  
       this.setAttribute('role', 'alert');
 
       // Default to info
@@ -43,21 +51,9 @@
         this.setAttribute('type', 'info');
       }
 
-      // Check if SSR
-      this.header = this.querySelector('h4');
-      this.messageContainer = this.querySelector('div');
-
-      if (this.header) {
-        this.title = this.header.innerText;
+      if (this.querySelector('h4') && this.querySelector('div')) {
+        this.init();
       }
-
-      if (this.messageContainer) {
-        this.message = this.messageContainer.innerHTML;
-      }
-  
-      this.render();
-
-      this.dispatchCustomEvent('joomla.alert.show');
     }
 
     /* Lifecycle, element removed from the DOM */
@@ -65,6 +61,8 @@
       if (this.closeButton) {
         this.closeButton.removeEventListener('click', this.close);
       }
+
+      this.observer.disconnect();
     }
 
     /* Respond to attribute changes */
@@ -95,7 +93,7 @@
 
     /* Method to close the alert */
     close() {
-      this.dispatchCustomEvent('joomla.alert.close');
+      this.dispatchCustomEvent('Joomla.Alert.onClose');
       this.removeAttribute('show');
       this.parentNode.removeChild(this);
     }
@@ -131,8 +129,31 @@
       }
     }
 
-    render() {
+    // Callback function to execute when mutations are observed
+    callback(mutationsList) {
+      for (let mutation of mutationsList) {
+        if (mutation.type === 'childList') {
+          console.log(mutation)
+          //this.init();
+        }
+      }
+    }
 
+    init(){
+      if (this.header) {
+        this.title = this.header.innerText;
+      }
+
+      if (this.messageContainer) {
+        this.message = this.messageContainer.innerHTML;
+      }
+
+      this.render();
+
+      this.dispatchCustomEvent('Joomla.Alert.onShow');
+    }
+
+    render() {
       if (this.title) {
         if (!this.header) {
           this.header = document.createElement('h4');

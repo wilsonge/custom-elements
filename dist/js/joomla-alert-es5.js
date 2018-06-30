@@ -85,6 +85,11 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
       _this.removeCloseButton = _this.removeCloseButton.bind(_this);
       _this.render = _this.render.bind(_this);
       _this.close = _this.close.bind(_this);
+      _this.callback = _this.callback.bind(_this);
+      _this.init = _this.init.bind(_this);
+
+      // Create an observer instance linked to the callback function
+      _this.observer = new MutationObserver(_this.callback);
       return _this;
     }
     /* Lifecycle, element appended to the DOM */
@@ -93,6 +98,9 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
     _createClass(_class, [{
       key: 'connectedCallback',
       value: function connectedCallback() {
+        // Start observing the target node for configured mutations
+        this.observer.observe(this, { attributes: true, childList: true, subtree: true });
+
         this.setAttribute('role', 'alert');
 
         // Default to info
@@ -100,21 +108,9 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
           this.setAttribute('type', 'info');
         }
 
-        // Check if SSR
-        this.header = this.querySelector('h4');
-        this.messageContainer = this.querySelector('div');
-
-        if (this.header) {
-          this.title = this.header.innerText;
+        if (this.querySelector('h4') && this.querySelector('div')) {
+          this.init();
         }
-
-        if (this.messageContainer) {
-          this.message = this.messageContainer.innerHTML;
-        }
-
-        this.render();
-
-        this.dispatchCustomEvent('joomla.alert.show');
       }
 
       /* Lifecycle, element removed from the DOM */
@@ -125,6 +121,8 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
         if (this.closeButton) {
           this.closeButton.removeEventListener('click', this.close);
         }
+
+        this.observer.disconnect();
       }
 
       /* Respond to attribute changes */
@@ -164,7 +162,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
     }, {
       key: 'close',
       value: function close() {
-        this.dispatchCustomEvent('joomla.alert.close');
+        this.dispatchCustomEvent('Joomla.Alert.onClose');
         this.removeAttribute('show');
         this.parentNode.removeChild(this);
       }
@@ -205,10 +203,58 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
           this.removeChild(this.closeButton);
         }
       }
+
+      // Callback function to execute when mutations are observed
+
+    }, {
+      key: 'callback',
+      value: function callback(mutationsList) {
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
+
+        try {
+          for (var _iterator = mutationsList[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            var mutation = _step.value;
+
+            if (mutation.type === 'childList') {
+              console.log(mutation);
+              //this.init();
+            }
+          }
+        } catch (err) {
+          _didIteratorError = true;
+          _iteratorError = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion && _iterator.return) {
+              _iterator.return();
+            }
+          } finally {
+            if (_didIteratorError) {
+              throw _iteratorError;
+            }
+          }
+        }
+      }
+    }, {
+      key: 'init',
+      value: function init() {
+        if (this.header) {
+          this.title = this.header.innerText;
+        }
+
+        if (this.messageContainer) {
+          this.message = this.messageContainer.innerHTML;
+        }
+
+        this.render();
+
+        this.dispatchCustomEvent('Joomla.Alert.onShow');
+      }
     }, {
       key: 'render',
       value: function render() {
-
         if (this.title) {
           if (!this.header) {
             this.header = document.createElement('h4');
