@@ -133,8 +133,7 @@
     callback(mutationsList) {
       for (let mutation of mutationsList) {
         if (mutation.type === 'childList') {
-          console.log(mutation)
-          //this.init();
+          this.init();
         }
       }
     }

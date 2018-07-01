@@ -218,8 +218,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
             var mutation = _step.value;
 
             if (mutation.type === 'childList') {
-              console.log(mutation);
-              //this.init();
+              this.init();
             }
           }
         } catch (err) {
