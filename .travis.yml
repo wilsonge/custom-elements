@@ -7,9 +7,9 @@ node_js:
 before_install:
 - if [[ `npm -v` != 6* ]]; then npm install --unsafe-perm --verbose -g npm@6; fi
 install:
-- npm install
+- npm ci
 script:
-- eslint src
+- npm run lint
 - if [[ ! -z ${SAUCE_ACCESS_KEY} ]]; then wct --configFile saucelabs.conf.json --plugin sauce; fi
 notifications:
   email: false
